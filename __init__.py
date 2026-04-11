@@ -593,6 +593,54 @@ class DrawZone(QWidget):
 
 # ── Toolbar ───────────────────────────────────────────────────────────────────
 
+class _HoldButton(QPushButton):
+    """
+    QPushButton that distinguishes short left-click from left-click-hold.
+    Right-click is completely ignored (does nothing, no context menu).
+    short_action : called on short left-click (< hold_ms)
+    hold_action  : called when left button held >= hold_ms
+    The hold_action replaces the clicked signal for long press.
+    """
+    def __init__(self, hold_ms=600, parent=None):
+        super().__init__(parent)
+        self._hold_ms     = hold_ms
+        self._hold_timer  = QTimer(self)
+        self._hold_timer.setSingleShot(True)
+        self._hold_active = False   # True while left button is held
+        self._held_fired  = False   # True if hold action already triggered
+        self.short_action = None
+        self.hold_action  = None
+
+    def mousePressEvent(self, e):
+        if e.button() != Qt.MouseButton.LeftButton:
+            e.ignore()   # right-click / middle-click → do nothing
+            return
+        self._held_fired = False
+        self._hold_active = True
+        self._hold_timer.start(self._hold_ms)
+        e.accept()
+
+    def mouseReleaseEvent(self, e):
+        if e.button() != Qt.MouseButton.LeftButton:
+            e.ignore(); return
+        self._hold_timer.stop()
+        if self._hold_active and not self._held_fired:
+            # Short click → run short_action
+            if self.short_action:
+                self.short_action()
+        self._hold_active = False
+        e.accept()
+
+    def _on_hold_timer(self):
+        if self._hold_active:
+            self._held_fired = True
+            if self.hold_action:
+                self.hold_action()
+
+    def contextMenuEvent(self, e):
+        e.ignore()   # suppress right-click context menus
+
+
 class DrawToolbar(QWidget):
     """
     Minimalistic Drawing Panel toolbar.
@@ -640,13 +688,7 @@ class DrawToolbar(QWidget):
         # Writing mode: "fast" / "balanced" / "precision"
         self._writing_mode = cfg.get("writing_mode", "balanced")
 
-        # Long-press timers
-        self._press_timer = QTimer(); self._press_timer.setSingleShot(True)
-        self._thick_timer = QTimer(); self._thick_timer.setSingleShot(True)
-        self._erase_timer = QTimer(); self._erase_timer.setSingleShot(True)
-        self._press_timer.timeout.connect(self._show_pen_menu)  # hold pen → writing mode menu
-        self._thick_timer.timeout.connect(self._on_color)      # hold thick → colour
-        self._erase_timer.timeout.connect(self._show_erase_menu)
+        # (long-press handled by _HoldButton — no separate timers needed)
 
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -657,34 +699,35 @@ class DrawToolbar(QWidget):
         self._layout = lay
 
         # ── 1. Pen button (always visible) ────────────────────────────────
-        self.pen_btn = QPushButton()
+        self.pen_btn = _HoldButton(hold_ms=600)
         self.pen_btn.setFixedSize(self.BTN, self.BTN)
         self.pen_btn.setCheckable(True)
-        self.pen_btn.setToolTip(f"{ADDON_NAME} — click to draw")
+        self.pen_btn.setToolTip(f"{ADDON_NAME} — click to draw, hold for writing mode")
         self.pen_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.pen_btn.pressed.connect(
-            lambda: self._press_timer.start(600))
-        self.pen_btn.released.connect(self._press_timer.stop)
-        self.pen_btn.clicked.connect(self._on_pen_click)
+        self.pen_btn.short_action = self._on_pen_click
+        self.pen_btn.hold_action  = self._show_pen_menu
+        self.pen_btn._hold_timer.timeout.connect(self.pen_btn._on_hold_timer)
         lay.addWidget(self.pen_btn)
 
         # ── 2. Eraser (hidden until expanded) ────────────────────────────
-        self.eraser_btn = QPushButton()
+        self.eraser_btn = _HoldButton(hold_ms=600)
         self.eraser_btn.setFixedSize(self.BTN, self.BTN)
-        self.eraser_btn.setToolTip("Eraser (hold for mode)")
+        self.eraser_btn.setToolTip("Eraser — click to activate, hold for mode")
         self.eraser_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.eraser_btn.pressed.connect(lambda: self._erase_timer.start(600))
-        self.eraser_btn.released.connect(self._on_eraser_released)
+        self.eraser_btn.short_action = self._activate_eraser
+        self.eraser_btn.hold_action  = self._show_erase_menu
+        self.eraser_btn._hold_timer.timeout.connect(self.eraser_btn._on_hold_timer)
         lay.addWidget(self.eraser_btn)
         self.eraser_btn.hide()
 
         # ── 3. Thickness / colour button (hidden until expanded) ──────────
-        self.thick_btn = QPushButton()
+        self.thick_btn = _HoldButton(hold_ms=600)
         self.thick_btn.setFixedSize(self.BTN, self.BTN)
+        self.thick_btn.setToolTip("Thickness — click to cycle, hold for colour")
         self.thick_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.thick_btn.pressed.connect(
-            lambda: self._thick_timer.start(600))
-        self.thick_btn.released.connect(self._on_thick_released)
+        self.thick_btn.short_action = self._cycle_thickness_click
+        self.thick_btn.hold_action  = self._on_color
+        self.thick_btn._hold_timer.timeout.connect(self.thick_btn._on_hold_timer)
         lay.addWidget(self.thick_btn)
         self.thick_btn.hide()
 
@@ -729,11 +772,12 @@ class DrawToolbar(QWidget):
         zone._pen_color = QColor(self._current_color)
 
         # Tiny toggle dot
-        self._eye_btn = QPushButton(mw)
+        self._eye_btn = _HoldButton(hold_ms=9999, parent=mw)  # no hold action
         self._eye_btn.setFixedSize(10, 10)
         self._eye_btn.setToolTip(f"Show/hide {ADDON_NAME} toolbar")
         self._eye_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._eye_btn.clicked.connect(self._toggle_visibility)
+        self._eye_btn.short_action = self._toggle_visibility
+        self._eye_btn._hold_timer.timeout.connect(self._eye_btn._on_hold_timer)
         self._toolbar_visible = _cfg().get("toolbar_visible", True)
         self._update_eye_style()
         self._apply_visibility()
@@ -928,6 +972,8 @@ class DrawToolbar(QWidget):
 
     def _on_pen_click(self):
         """Toggle drawing on/off AND expand/collapse the tools."""
+        # Toggle the checkable state manually since _HoldButton doesn't use clicked signal
+        self.pen_btn.setChecked(not self.pen_btn.isChecked())
         chk = self.pen_btn.isChecked()
         self._expanded = chk
         self.zone.set_pen()
@@ -954,21 +1000,19 @@ class DrawToolbar(QWidget):
             c = _cfg(); c["pen_size"] = pt_val; _save_cfg(c)
         except Exception: pass
 
+    def _cycle_thickness_click(self):
+        """Short click on thickness dots → cycle to next level."""
+        self._thick_idx = (self._thick_idx + 1) % len(self.THICKNESS_LEVELS)
+        self._apply_thickness()
+        self._refresh_icons()
+
     def _on_thick_released(self):
-        if self._thick_timer.isActive():
-            self._thick_timer.stop()
-            # Short click → cycle thickness
-            self._thick_idx = (self._thick_idx + 1) % len(self.THICKNESS_LEVELS)
-            self._apply_thickness()
-            self._refresh_icons()
-        # else: long-press already triggered _on_color via timer
+        pass  # kept for safety; _HoldButton handles this now
 
     # ── Eraser ────────────────────────────────────────────────────────────
 
     def _on_eraser_released(self):
-        if self._erase_timer.isActive():
-            self._erase_timer.stop()
-            self._activate_eraser()  # short click
+        pass  # kept for safety; _HoldButton handles this now
 
     def _activate_eraser(self):
         self.zone.set_eraser()
@@ -1012,9 +1056,7 @@ class DrawToolbar(QWidget):
     # ── Colour ────────────────────────────────────────────────────────────
 
     def _on_color(self):
-        """Colour picker — triggered by holding pen OR holding thickness dots."""
-        self._press_timer.stop()
-        self._thick_timer.stop()
+        """Colour picker — triggered by holding thickness dots."""
         col = QColorDialog.getColor(self._current_color, self, "Pick ink color")
         if col.isValid():
             self._current_color = col
@@ -1030,17 +1072,17 @@ class DrawToolbar(QWidget):
 
     def mousePressEvent(self, event):
         btn = event.button(); key = _pen_key()
-        if btn != Qt.MouseButton.LeftButton:
-            if btn == Qt.MouseButton.MiddleButton:
-                # Middle click = toggle pen on/off (only action)
-                _toggle_pen(); event.accept(); return
-            elif (key == "mouse_4" and btn == Qt.MouseButton.XButton1) or                  (key == "mouse_5" and btn == Qt.MouseButton.XButton2):
-                _toggle_pen(); event.accept(); return
-            event.ignore()
-            tgt = QApplication.widgetAt(event.globalPosition().toPoint())
-            if tgt and tgt is not self: QApplication.sendEvent(tgt, event)
+        if btn == Qt.MouseButton.RightButton:
+            event.ignore(); return   # right-click on toolbar → no effect
+        if btn == Qt.MouseButton.MiddleButton:
+            _toggle_pen(); event.accept(); return
+        if btn == Qt.MouseButton.LeftButton:
+            self._drag_pos = event.globalPosition().toPoint() - self.pos()
             return
-        self._drag_pos = event.globalPosition().toPoint() - self.pos()
+        # XButton1/2
+        if (key == "mouse_4" and btn == Qt.MouseButton.XButton1) or            (key == "mouse_5" and btn == Qt.MouseButton.XButton2):
+            _toggle_pen(); event.accept(); return
+        event.ignore()
 
     def mouseMoveEvent(self, event):
         if not (event.buttons() & Qt.MouseButton.LeftButton) or not self._drag_pos:
@@ -1223,7 +1265,6 @@ class _SettingsDialog(QDialog):
 
         self.result_key           = current_key
         self.result_locked        = zone_locked
-        self.result_show_tb       = cfg.get("toolbar_visible", True)
         self.result_auto_clear    = cfg.get("auto_clear", True)
         self.result_barrel_en     = cfg.get("barrel_enabled", True)
         self.result_barrel_act    = cfg.get("barrel_action", "toggle")
@@ -1326,17 +1367,7 @@ class _SettingsDialog(QDialog):
         lay.addWidget(self._auto_clear_cb)
 
 
-        # ── TOOLBAR ───────────────────────────────────────────────────────
-        lay.addWidget(_section_hdr("TOOLBAR"))
-        self._show_tb_cb = QCheckBox("Show toolbar")
-        self._show_tb_cb.setStyleSheet(cb_ss)
-        self._show_tb_cb.setChecked(cfg.get("toolbar_visible", True))
-        lay.addWidget(self._show_tb_cb)
-
-        # Undo/redo note
-        hint_ud = QLabel("Undo: Alt+Z  •  Redo: Alt+Y  (or Ctrl+Z/Y when pen active)")
-        hint_ud.setStyleSheet(dim_ss)
-        lay.addWidget(hint_ud)
+        # (Show toolbar removed — controlled via eye-dot on toolbar directly)
 
         # ── WRITING AREA ──────────────────────────────────────────────────
         lay.addWidget(_section_hdr("WRITING AREA"))
@@ -1355,13 +1386,29 @@ class _SettingsDialog(QDialog):
 
         # ── HELP ──────────────────────────────────────────────────────────
         lay.addWidget(_section_hdr("HELP"))
-        help_btn = QPushButton("Open Help Guide")
-        help_btn.setStyleSheet(
+
+        btn_ss = (
             f"QPushButton{{background:transparent;border:1px solid {t['bdr']};"
             f"border-radius:5px;padding:5px 14px;font-size:11px;color:{t['txt']};}}"
             f"QPushButton:hover{{background:{t['base']};border-color:{t['txt']};}}")
+
+        help_btn = QPushButton("Open Help Guide")
+        help_btn.setStyleSheet(btn_ss)
         help_btn.clicked.connect(lambda: (_show_welcome(force=True), self.accept()))
         lay.addWidget(help_btn)
+
+        issue_btn = QPushButton("⚑  Report an Issue")
+        issue_btn.setStyleSheet(btn_ss)
+        issue_btn.setToolTip("Opens GitHub Issues page")
+        issue_btn.clicked.connect(lambda: QDesktopServices.openUrl(
+            QUrl("https://github.com/Doummar/Minimalistic_Drawing_Panel/issues")))
+        lay.addWidget(issue_btn)
+
+        reset_btn = QPushButton("↺  Reset to Default")
+        reset_btn.setStyleSheet(btn_ss)
+        reset_btn.setToolTip("Restore all settings to default values")
+        reset_btn.clicked.connect(self._reset_to_default)
+        lay.addWidget(reset_btn)
 
         # ── Save / Cancel ─────────────────────────────────────────────────
         lay.addSpacing(10)
@@ -1383,12 +1430,51 @@ class _SettingsDialog(QDialog):
 
     def _accept(self):
         self.result_locked          = self._lock_cb.isChecked()
-        self.result_show_tb         = self._show_tb_cb.isChecked()
         self.result_auto_clear      = self._auto_clear_cb.isChecked()
         self.result_barrel_en       = self._barrel_en_cb.isChecked()
         self.result_barrel_act      = self._barrel_combo.currentData()
-        # visibility_mode kept at its last saved value (UI removed)
         self.accept()
+
+    def _reset_to_default(self):
+        reply = QMessageBox.question(
+            self, f"{ADDON_NAME} — Reset",
+            "Reset all settings to default values?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        # Apply defaults to config
+        defaults = {
+            "pen_key": "½", "pen_color": "#1a1814", "pen_size": 4,
+            "erase_mode": "dot", "writing_mode": "balanced",
+            "auto_clear": True, "toolbar_visible": True,
+            "visibility_mode": "standard", "zone_locked": False,
+            "barrel_enabled": True, "barrel_action": "toggle",
+        }
+        _save_cfg(defaults)
+        # Update UI widgets to reflect defaults
+        self._key_disp.setText(f"Current: {_pen_key_label('½')}")
+        self.result_key = "½"
+        self._auto_clear_cb.setChecked(True)
+        self._lock_cb.setChecked(False)
+        self._barrel_en_cb.setChecked(True)
+        for i, (v, _) in enumerate(self.BARREL_ACTION_OPTIONS):
+            if v == "toggle": self._barrel_combo.setCurrentIndex(i); break
+        # Apply live to toolbar/zone
+        tb = _controller._toolbar
+        if tb:
+            tb._current_color = QColor("#1a1814")
+            tb._thick_idx = 2
+            tb._erase_mode = "dot"
+            tb._writing_mode = "balanced"
+            tb.zone.set_color(QColor("#1a1814"))
+            tb.zone._pen_color = QColor("#1a1814")
+            tb.zone._writing_mode = "balanced"
+            tb.zone._erase_mode = "dot"
+            tb._apply_thickness()
+            tb._refresh_icons()
+            tb._update_styles()
+        QMessageBox.information(self, f"{ADDON_NAME}", "Settings reset to default.")
 
     def _set_key(self, val):
         self.result_key = val
@@ -1468,9 +1554,12 @@ def _show_welcome(force=False):
     section("How to use", [
         "Click the pen icon to activate drawing (expands toolbar)",
         "Click again to collapse and deactivate",
-        "Hold thickness dots to pick a colour",
-        "Hold eraser icon to choose Line or Dot erase mode",
-        "Tiny dot next to toolbar = show/hide toggle",
+        "Hold thickness dots (left-click + hold) to pick a colour",
+        "Hold eraser icon (left-click + hold) to choose Line or Dot erase mode",
+        "Hold pen icon (left-click + hold) to change writing mode",
+        "Tiny dot next to toolbar = show/hide toggle (left-click)",
+        "Undo: Alt+Z  (or Ctrl+Z when pen active)",
+        "Redo: Alt+Y  (or Ctrl+Y when pen active)",
     ])
 
     section(f"Settings  (Tools → {ADDON_NAME} Settings)", [
@@ -1511,7 +1600,6 @@ def _show_draw_settings():
     if dlg.exec() == QDialog.DialogCode.Accepted:
         cfg["pen_key"]          = dlg.result_key
         cfg["zone_locked"]      = dlg.result_locked
-        cfg["toolbar_visible"]  = dlg.result_show_tb
         cfg["auto_clear"]       = dlg.result_auto_clear
         cfg["barrel_enabled"]   = dlg.result_barrel_en
         cfg["barrel_action"]    = dlg.result_barrel_act
@@ -1521,7 +1609,6 @@ def _show_draw_settings():
         if z: z._locked = dlg.result_locked
         tb = _controller._toolbar
         if tb:
-            tb._toolbar_visible   = dlg.result_show_tb
             tb._visibility_mode   = dlg.result_visibility_mode
             tb._apply_visibility()
 
