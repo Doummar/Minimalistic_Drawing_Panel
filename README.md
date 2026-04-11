@@ -62,6 +62,7 @@ C:\Users\YOUR_NAME\AppData\Roaming\Anki2\addons21\
 
 5. Restart Anki
 
+Or https://ankiweb.net/shared/info/1062267970?cb=1775912735881
 ---
 
 ## How to use
