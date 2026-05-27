@@ -98,5 +98,7 @@ Feedback helps improve both the add-on and my own learning journey as I continue
 **Keep calm, keep drawing, and study on!** — Adel
 
 
+
 MIT License
+
 Copyright (c) 2026 Adel
