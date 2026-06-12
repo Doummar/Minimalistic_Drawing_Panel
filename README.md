@@ -35,6 +35,13 @@ The add-on is designed to stay **minimal, fast, and distraction-free**.
 
 ![Minimalistic Drawing Panel](https://i.postimg.cc/3RSgfhPX/1111.png)
 
+<h3>Quick Demo</h3>
+
+<p align="center">
+    <img src="https://i.postimg.cc/Dzk4cfDB/2026-04-2921-00-03-ezgif-com-video-to-gif-converter-(4).gif"
+         style="width:100%; height:auto; border-radius:10px;">
+</p>
+
 ---
 
 ## Installation
