@@ -1,9 +1,0 @@
-{
-    "type": "object",
-    "properties": {
-        "pen_key": {
-            "type": "string",
-            "description": "Key to toggle pen on/off"
-        }
-    }
-}
