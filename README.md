@@ -1,10 +1,10 @@
 # Minimalistic Drawing Panel for Anki
 
-A lightweight **drawing and handwriting panel for Anki** that lets you write, sketch, annotate, solve problems, and draw directly while reviewing cards.
+A lightweight **drawing and handwriting add-on for Anki** that lets you write, draw, annotate, solve problems, and sketch directly during card reviews.
 
-Use your **mouse, touchscreen, Surface Pen, stylus, or other pen input** to write directly over your Anki cards without leaving the review screen.
+Use a **mouse, touchscreen, Surface Pen, stylus, or other pen input** to write directly on your Anki cards without leaving the review screen.
 
-Designed to stay **minimal, fast, and distraction-free**, so you can focus on studying instead of managing a complicated drawing interface.
+Minimalistic Drawing Panel is designed to be **simple, fast, and distraction-free**. It gives you a small drawing workspace inside Anki without turning your review screen into a full drawing application.
 
 <p align="center">
     <img src="https://i.postimg.cc/Dzk4cfDB/2026-04-2921-00-03-ezgif-com-video-to-gif-converter-(4).gif"
@@ -17,48 +17,52 @@ Designed to stay **minimal, fast, and distraction-free**, so you can focus on st
 
 ---
 
-## What It Does
+## What Is Minimalistic Drawing Panel?
 
-Minimalistic Drawing Panel turns Anki into a simple **digital writing and drawing workspace**.
+Minimalistic Drawing Panel adds a simple **drawing and handwriting area to Anki's review screen**.
 
-You can write directly on your cards while studying instead of switching to another application or using a separate notebook.
+Instead of leaving Anki to open another drawing application or notebook, you can write directly while studying.
 
-It is useful for:
+It can be used for:
 
 - Handwritten notes
-- Solving math problems
-- Solving physics and science problems
-- Drawing diagrams
-- Sketching ideas
+- Mathematics and calculations
+- Physics and science problems
+- Diagrams and sketches
 - Underlining important information
-- Annotating study material
-- Working through calculations
-- Highlighting information
-- Quick scratch work during review
+- Annotations
+- Vocabulary notes
+- Language-learning exercises
+- Working through problems step by step
+- Quick scratch work during reviews
 
-The drawing is temporary and can automatically clear when you move to the next card, keeping the next review clean.
+The drawing is intended as a temporary study workspace. With auto-clear enabled, your drawing can automatically disappear when you move to the next card.
 
 ---
 
 ## Features
 
-### Drawing & Handwriting
+### Drawing and Handwriting
 
 - Draw directly on Anki cards
-- Write handwritten notes during review
-- Works with **mouse, touchscreen, pen, and stylus**
-- Suitable for handwriting and quick annotations
+- Write handwritten notes during reviews
+- Mouse input
+- Touchscreen input
+- Pen and stylus input
 - Adjustable drawing thickness
 - 5 thickness levels
-- Colour picker for drawing colours
+- Colour picker
+- Quick drawing and annotation workflow
 
 ### Surface Pen Support
 
-Designed to work naturally with **Microsoft Surface Pen** input.
+Minimalistic Drawing Panel supports **Microsoft Surface Pen** input.
 
 - Pen tip → write
 - Eraser tip → erase
-- Configurable side-button action
+- Configurable Surface Pen side-button action
+
+This makes it useful for Surface users who want to write naturally on their Anki cards.
 
 ### Erasing
 
@@ -69,17 +73,20 @@ Designed to work naturally with **Microsoft Surface Pen** input.
 
 ### Study Workflow
 
-- Auto-clear drawing when moving to the next card
+- Auto-clear drawing on the next card
 - Show or hide the drawing toolbar
-- Lock the drawing area to prevent accidental resizing
-- Toggle drawing with a configurable key or mouse button
-- Lightweight interface designed for focused study
+- Lock the drawing area
+- Prevent accidental resizing
+- Configurable toggle key or mouse button
+- Lightweight interface
+- Designed for focused Anki reviews
 
 ### Appearance
 
-- Automatic light and dark mode support
+- Light mode support
+- Dark mode support
 - Minimal toolbar
-- No unnecessary panels or complicated interface
+- No unnecessary panels
 - Designed to fit naturally into the Anki review screen
 
 ---
@@ -99,8 +106,10 @@ Designed to work naturally with **Microsoft Surface Pen** input.
 
 ## Screenshot
 
+The screenshot is stored directly in this repository so the GitHub README does not depend on an external image host.
+
 <p align="center">
-    <img src="https://i.postimg.cc/qR794h2W/image.png"
+    <img src="images/drawing-panel.png"
          style="width:100%; height:auto; border-radius:10px;">
 </p>
 
@@ -109,21 +118,21 @@ Designed to work naturally with **Microsoft Surface Pen** input.
 ## How to Use
 
 1. Start reviewing cards in Anki.
-2. Activate the **Minimalistic Drawing Panel**.
+2. Activate **Minimalistic Drawing Panel**.
 3. Write or draw directly on the card.
-4. Use the thickness controls to change line size.
+4. Use the thickness controls to change the line size.
 5. Hold a thickness dot to open the colour picker.
 6. Use the eraser when needed.
 7. Move to the next card when finished.
-8. If auto-clear is enabled, the drawing is automatically cleared for the next card.
+8. If auto-clear is enabled, the drawing is cleared automatically for the next card.
 
 ### Toolbar Controls
 
 - **Pen icon** — activate or collapse the drawing panel
 - **Thickness dots** — change drawing thickness
-- **Hold thickness dot** — open the colour picker
+- **Hold a thickness dot** — open the colour picker
 - **Eraser** — switch to erase mode
-- **Hold eraser** — switch eraser mode
+- **Hold the eraser** — switch eraser mode
 - **Small dot** — show or hide the toolbar
 
 ---
@@ -137,9 +146,9 @@ You can use the Surface Pen naturally during Anki reviews:
 - Write with the pen tip
 - Erase with the pen's eraser tip
 - Configure the Surface Pen side button
-- Use pressure-sensitive pen input where supported by the device
+- Use pen input for handwriting, calculations, diagrams, and annotations
 
-This makes the add-on useful for handwritten calculations, diagrams, language notes, mathematics, physics, and other subjects where writing directly on the card is helpful.
+This can be especially useful for subjects where writing is part of the learning process, such as **mathematics, physics, science, language learning, and medicine**.
 
 ---
 
@@ -157,7 +166,7 @@ Available settings include:
 - Toolbar visibility
 - Drawing area lock
 
-The settings are intentionally kept simple so the drawing panel remains lightweight during review.
+The settings are intentionally kept simple so the drawing panel stays out of the way during reviews.
 
 ---
 
@@ -165,11 +174,9 @@ The settings are intentionally kept simple so the drawing panel remains lightwei
 
 ### AnkiWeb
 
-The easiest way to install the add-on is through AnkiWeb:
+The easiest way to install Minimalistic Drawing Panel is through AnkiWeb.
 
-https://ankiweb.net/shared/info/1062267970
-
-Install it from Anki's **Tools → Add-ons → Get Add-ons** menu using the AnkiWeb code:
+**AnkiWeb code:**
 
 ```text
 1062267970
