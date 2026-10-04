@@ -91,27 +91,9 @@ This makes it useful for Surface users who want to write naturally on their Anki
 
 ---
 
-## Quick Demo
-
-<p align="center">
-    <img src="https://i.postimg.cc/Dzk4cfDB/2026-04-2921-00-03-ezgif-com-video-to-gif-converter-(4).gif"
-         style="width:auto; height:auto; border-radius:10px;">
-</p>
-
-<p align="center">
-<b>Use the drawing panel for handwriting, calculations, sketches, and annotations</b>
-</p>
-
----
-
 ## Screenshot
 
-The screenshot is stored directly in this repository so the GitHub README does not depend on an external image host.
-
-<p align="center">
-    <img src="images/drawing-panel.png"
-         style="width:100%; height:auto; border-radius:10px;">
-</p>
+![Minimalistic Drawing Panel](images/drawing-panel.png)
 
 ---
 
