@@ -93,10 +93,6 @@ This makes it useful for Surface users who want to write naturally on their Anki
 
 ## Screenshot
 
-## Screenshot
-
-## Screenshot
-
 ![Minimalistic Drawing Panel](https://raw.githubusercontent.com/Doummar/Minimalistic_Drawing_Panel/main/images/drawing-panel.png)
 
 ---
