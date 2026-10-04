@@ -100,7 +100,7 @@ Designed to work naturally with **Microsoft Surface Pen** input.
 ## Screenshot
 
 <p align="center">
-    <img src="https://i.postimg.cc/3RSgfhPX/1111.png"
+    <img src="https://i.postimg.cc/qR794h2W/image.png"
          style="width:100%; height:auto; border-radius:10px;">
 </p>
 
